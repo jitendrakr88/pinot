@@ -28,8 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.sql.SqlBasicCall;
@@ -93,18 +91,14 @@ public class CalciteSqlParser {
   //
   // Multiple OPTIONs is also supported by:
   // `OPTION (<k1> = <v1>, <k2> = <v2>, <k3> = <v3>)`
-  private static final Pattern OPTIONS_REGEX_PATTEN =
-      Pattern.compile("\\s*option\\s*\\(([^)]+)\\)\\s*;?\\s*\\Z", Pattern.CASE_INSENSITIVE);
 
   public static SqlNodeAndOptions compileToSqlNodeAndOptions(String sql)
       throws SqlCompilationException {
     long parseStartTimeNs = System.nanoTime();
 
     // extract and remove OPTIONS string
-    List<String> options = extractOptionsFromSql(sql);
-    if (!options.isEmpty()) {
-      sql = removeOptionsFromSql(sql);
-    }
+    Map<String, String> queryOptionsMap = new HashMap<>();
+    sql = QueryOptionParser.extractQueryOptions(sql, queryOptionsMap);
 
     try (StringReader inStream = new StringReader(sql)) {
       SqlParserImpl sqlParser = newSqlParser(inStream);
@@ -112,8 +106,8 @@ public class CalciteSqlParser {
       // Extract OPTION statements from sql.
       SqlNodeAndOptions sqlNodeAndOptions = extractSqlNodeAndOptions(sqlNodeList);
       // add legacy OPTIONS keyword-based options
-      if (!options.isEmpty()) {
-        sqlNodeAndOptions.setExtraOptions(extractOptionsMap(options));
+      if (!queryOptionsMap.isEmpty()) {
+        sqlNodeAndOptions.setExtraOptions(queryOptionsMap);
       }
       sqlNodeAndOptions.setParseTimeNs(System.nanoTime() - parseStartTimeNs);
       return sqlNodeAndOptions;
@@ -562,37 +556,6 @@ public class CalciteSqlParser {
     }
     // Validate
     validate(pinotQuery);
-  }
-
-  @Deprecated
-  private static List<String> extractOptionsFromSql(String sql) {
-    List<String> results = new ArrayList<>();
-    Matcher matcher = OPTIONS_REGEX_PATTEN.matcher(sql);
-    while (matcher.find()) {
-      results.add(matcher.group(1));
-    }
-    return results;
-  }
-
-  @Deprecated
-  private static String removeOptionsFromSql(String sql) {
-    Matcher matcher = OPTIONS_REGEX_PATTEN.matcher(sql);
-    return matcher.replaceAll("");
-  }
-
-  @Deprecated
-  private static Map<String, String> extractOptionsMap(List<String> optionsStatements) {
-    Map<String, String> options = new HashMap<>();
-    for (String optionsStatement : optionsStatements) {
-      for (String option : optionsStatement.split(",")) {
-        final String[] splits = option.split("=");
-        if (splits.length != 2) {
-          throw new SqlCompilationException("OPTION statement requires two parts separated by '='");
-        }
-        options.put(splits[0].trim(), splits[1].trim());
-      }
-    }
-    return options;
   }
 
   private static List<Expression> convertDistinctSelectList(SqlNodeList selectList) {
