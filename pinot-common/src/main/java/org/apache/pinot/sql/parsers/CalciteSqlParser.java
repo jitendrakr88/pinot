@@ -98,7 +98,7 @@ public class CalciteSqlParser {
 
     // extract and remove OPTIONS string
     Map<String, String> queryOptionsMap = new HashMap<>();
-    sql = QueryOptionParser.extractQueryOptions(sql, queryOptionsMap);
+    sql = QueryOptionParser.extractQueryOptions(sql, queryOptionsMap, true);
 
     try (StringReader inStream = new StringReader(sql)) {
       SqlParserImpl sqlParser = newSqlParser(inStream);

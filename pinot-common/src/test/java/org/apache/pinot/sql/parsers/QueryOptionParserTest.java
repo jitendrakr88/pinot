@@ -99,14 +99,14 @@ public class QueryOptionParserTest {
     private void testQueryOptionWhenQueryUnchanged(String input) {
         // Invalid query option expr will be ignored.
         Map<String, String> queryOptionSink = new HashMap<>();
-        assertEquals(QueryOptionParser.extractQueryOptions(input, queryOptionSink), input);
+        assertEquals(QueryOptionParser.extractQueryOptions(input, queryOptionSink, true), input);
         assertTrue(queryOptionSink.isEmpty());
     }
 
     private void testQueryOption(
             String input, String expectedQueryOutput, Map<String, String> expectedMap) {
         Map<String, String> options = new HashMap<>();
-        assertEquals(QueryOptionParser.extractQueryOptions(input, options), expectedQueryOutput);
+        assertEquals(QueryOptionParser.extractQueryOptions(input, options, true), expectedQueryOutput);
         assertEquals(options, expectedMap);
     }
 }

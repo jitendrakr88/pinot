@@ -44,8 +44,8 @@ public class QueryOptionParser {
      * and returns the SQL query without the options. We simply put each key-value pair to the map,
      * overwriting any existing values. Option expression can only exist at the end of the query.
      */
-    public static String extractQueryOptions(String sql, Map<String, String> sink) {
-        return new QueryOptionParser().extractQueryOptionsInternal(sql, sink);
+    public static String extractQueryOptions(String sql, Map<String, String> sink, boolean stripQueryOptions) {
+        return new QueryOptionParser().extractQueryOptionsInternal(sql, sink, stripQueryOptions);
     }
 
     /**
@@ -58,22 +58,21 @@ public class QueryOptionParser {
      *       query
      * </ol>
      */
-    private String extractQueryOptionsInternal(String sql, Map<String, String> sink) {
+    private String extractQueryOptionsInternal(String sql, Map<String, String> sink, boolean stripQueryOptions) {
         String lowercaseSql = sql.toLowerCase(Locale.ENGLISH);
         int lastIndexOfOptionKeyword = lowercaseSql.lastIndexOf("option");
         if (lastIndexOfOptionKeyword == -1) {
             return sql;
         }
         try {
-            Map<String, String> keyValuePairs =
-                    extractKeyValuePairs(lowercaseSql, lastIndexOfOptionKeyword);
+            Map<String, String> keyValuePairs = extractKeyValuePairs(lowercaseSql, lastIndexOfOptionKeyword);
             sink.putAll(keyValuePairs);
         } catch (Throwable ignored) {
         }
         if (_optionIndex == null) {
             return sql;
         }
-        return stripSubstring(sql, _optionIndex);
+        return stripQueryOptions ? stripSubstring(sql, _optionIndex) : sql;
     }
 
     /**
@@ -88,14 +87,10 @@ public class QueryOptionParser {
         currentIndex = consumeCharacter(lowercaseSql, currentIndex, '(');
         currentIndex = skipWhitespace(lowercaseSql, currentIndex);
         if (currentIndex < lowercaseSql.length() && lowercaseSql.charAt(currentIndex) == ')') {
-            // Handles empty options: 'option()'
-            // TODO: Clean this up after migrating any existing users.
             LOGGER.warn("[query-option-parser] Found empty option expression: 'option()'");
             _optionIndex = new Pair<>(startIndexOfOption, currentIndex + 1);
             return result;
         } else if (currentIndex < lowercaseSql.length() && lowercaseSql.charAt(currentIndex) == ',') {
-            // Handles empty options with a single comma: 'option(,)'
-            // TODO: Clean this up after migrating any existing users.
             LOGGER.warn("[query-option-parser] Found illegal empty option expression: 'option(,)'");
             currentIndex++;
             currentIndex = skipWhitespace(lowercaseSql, currentIndex);
@@ -127,8 +122,6 @@ public class QueryOptionParser {
 
             if (lowercaseSql.charAt(currentIndex) == ',') {
                 currentIndex++;
-                // We skip whitespace and fall through to ')' check, because legacy implementation allowed
-                // option(k=v,)
                 skipWhitespace(lowercaseSql, currentIndex);
             }
             Preconditions.checkState(currentIndex < lowercaseSql.length(), "Expected to read ')' or ','");
@@ -194,9 +187,7 @@ public class QueryOptionParser {
         tokenBuffer.append(quote);
         currentIndex++;
 
-        while (currentIndex < input.length()
-                && input.charAt(currentIndex) != quote
-                && isValidQueryOptionCharacter(input.charAt(currentIndex))) {
+        while (currentIndex < input.length() && input.charAt(currentIndex) != quote) {
             tokenBuffer.append(input.charAt(currentIndex));
             currentIndex++;
         }
