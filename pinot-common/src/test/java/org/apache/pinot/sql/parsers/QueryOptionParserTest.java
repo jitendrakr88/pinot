@@ -19,11 +19,11 @@
 package org.apache.pinot.sql.parsers;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.math3.util.Pair;
 import org.testng.annotations.Test;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
