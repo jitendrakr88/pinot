@@ -368,6 +368,10 @@ public class AggregationFunctionFactory {
             return new DistinctCountOffHeapAggregationFunction(arguments, nullHandlingEnabled);
           case DISTINCTCOUNTBITMAP:
             return new DistinctCountBitmapAggregationFunction(arguments);
+          case DISTINCTCOUNTBITMAP64:
+            return new DistinctCountBitmap64AggregationFunction(arguments);
+          case DISTINCTCOUNTBITMAP64MV:
+            return new DistinctCountBitmap64MVAggregationFunction(arguments);
           case SEGMENTPARTITIONEDDISTINCTCOUNT:
             return new SegmentPartitionedDistinctCountAggregationFunction(arguments);
           case DISTINCTCOUNTHLL:
