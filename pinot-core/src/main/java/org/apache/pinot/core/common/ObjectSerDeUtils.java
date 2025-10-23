@@ -76,6 +76,7 @@ import org.apache.datasketches.tuple.aninteger.IntegerSummary;
 import org.apache.datasketches.tuple.aninteger.IntegerSummaryDeserializer;
 import org.apache.pinot.common.CustomObject;
 import org.apache.pinot.common.utils.HashUtil;
+import org.apache.pinot.common.utils.Roaring64BitmapUtils;
 import org.apache.pinot.common.utils.RoaringBitmapUtils;
 import org.apache.pinot.core.query.aggregation.function.funnel.FunnelStepEvent;
 import org.apache.pinot.core.query.aggregation.utils.exprminmax.ExprMinMaxObject;
@@ -100,6 +101,7 @@ import org.apache.pinot.spi.utils.BigDecimalUtils;
 import org.apache.pinot.spi.utils.ByteArray;
 import org.locationtech.jts.geom.Geometry;
 import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.longlong.Roaring64Bitmap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -129,6 +131,7 @@ public class ObjectSerDeUtils {
     DataSketch(12),
     Geometry(13),
     RoaringBitmap(14),
+    Roaring64Bitmap(52),
     LongSet(15),
     FloatSet(16),
     DoubleSet(17),
@@ -239,6 +242,8 @@ public class ObjectSerDeUtils {
         return ObjectType.Geometry;
       } else if (value instanceof RoaringBitmap) {
         return ObjectType.RoaringBitmap;
+      } else if (value instanceof Roaring64Bitmap) {
+        return ObjectType.Roaring64Bitmap;
       } else if (value instanceof LongSet) {
         return ObjectType.LongSet;
       } else if (value instanceof FloatSet) {
@@ -1252,6 +1257,24 @@ public class ObjectSerDeUtils {
     }
   };
 
+  public static final ObjectSerDe<Roaring64Bitmap> ROARING_BITMAP64_SER_DE = new ObjectSerDe<Roaring64Bitmap>() {
+
+    @Override
+    public byte[] serialize(Roaring64Bitmap bitmap) {
+      return Roaring64BitmapUtils.serialize(bitmap);
+    }
+
+    @Override
+    public Roaring64Bitmap deserialize(byte[] bytes) {
+      return deserialize(ByteBuffer.wrap(bytes));
+    }
+
+    @Override
+    public Roaring64Bitmap deserialize(ByteBuffer byteBuffer) {
+      return Roaring64BitmapUtils.deserialize(byteBuffer);
+    }
+  };
+
   public static final ObjectSerDe<IdSet> ID_SET_SER_DE = new ObjectSerDe<IdSet>() {
 
     @Override
@@ -1803,6 +1826,7 @@ public class ObjectSerDeUtils {
       DATA_SKETCH_CPC_ACCUMULATOR_SER_DE,
       ORDERED_STRING_SET_SER_DE,
       FUNNEL_STEP_EVENT_ACCUMULATOR_SER_DE,
+      ROARING_BITMAP64_SER_DE,
   };
   //@formatter:on
 

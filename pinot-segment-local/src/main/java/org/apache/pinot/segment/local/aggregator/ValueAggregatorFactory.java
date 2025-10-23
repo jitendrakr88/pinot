@@ -58,6 +58,8 @@ public class ValueAggregatorFactory {
         return new MinMaxRangeValueAggregator();
       case DISTINCTCOUNTBITMAP:
         return new DistinctCountBitmapValueAggregator();
+      case DISTINCTCOUNTBITMAP64:
+        return new DistinctCountBitmap64ValueAggregator();
       case DISTINCTCOUNTHLL:
       case DISTINCTCOUNTRAWHLL:
         return new DistinctCountHLLValueAggregator(arguments);
@@ -113,6 +115,8 @@ public class ValueAggregatorFactory {
         return MinMaxRangeValueAggregator.AGGREGATED_VALUE_TYPE;
       case DISTINCTCOUNTBITMAP:
         return DistinctCountBitmapValueAggregator.AGGREGATED_VALUE_TYPE;
+      case DISTINCTCOUNTBITMAP64:
+        return DistinctCountBitmap64ValueAggregator.AGGREGATED_VALUE_TYPE;
       case DISTINCTCOUNTHLL:
       case DISTINCTCOUNTRAWHLL:
         return DistinctCountHLLValueAggregator.AGGREGATED_VALUE_TYPE;
